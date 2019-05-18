@@ -11,7 +11,14 @@
             "type": "http",
             "direction": "out",
             "name": "res"
+        },
+        {
+            "name": "newCertificates",
+            "type": "table",
+            "tableName": "certificates",
+            "connection": "AzureWebJobsStorage",
+            "direction": "out"
         }
     ],
-    "scriptFile": "../dist/HttpTrigger/index.js"
+    "scriptFile": "../dist/friendship-certificate/index.js"
 }
