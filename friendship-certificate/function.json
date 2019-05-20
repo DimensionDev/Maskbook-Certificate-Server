@@ -13,7 +13,7 @@
             "name": "res"
         },
         {
-            "name": "newCertificates",
+            "name": "$data",
             "type": "table",
             "tableName": "certificates",
             "connection": "AzureWebJobsStorage",
