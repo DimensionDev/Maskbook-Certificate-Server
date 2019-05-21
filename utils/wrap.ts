@@ -1,7 +1,7 @@
 import { Context, HttpRequest, HttpMethod, AzureFunction } from '@azure/functions'
 
 export class HTTPError extends Error {
-    constructor(message: { error: string }, public code = 400) {
+    constructor(message: { error: string } & Record<string, any>, public code = 400) {
         super(JSON.stringify(message))
     }
 }
@@ -13,12 +13,15 @@ export class TableInsert<T> {
         public data: T | T[],
         public partitionKeyBy: keyof T,
         public rowKeyBy: keyof T,
-        public binding = '$data',
+        public binding = 'data',
     ) {
         this.build_single = this.build_single.bind(this)
     }
     private build_single(obj: T) {
-        return Object.assign(obj, { RowKey: obj[this.rowKeyBy], PartitionKey: obj[this.partitionKeyBy] })
+        const obj2 = Object.assign(obj, { RowKey: obj[this.rowKeyBy], PartitionKey: obj[this.partitionKeyBy] })
+        delete obj2[this.rowKeyBy]
+        delete obj2[this.partitionKeyBy]
+        return obj2
     }
     build() {
         if (Array.isArray(this.data)) {
@@ -70,9 +73,12 @@ export function wrap<T>(funcs: { [key in HttpMethod]?: Fn<Response<T> | void> })
             }
             return returnValue
         } catch (e) {
-            if (!(e instanceof HTTPError)) context.log(e.message, e.stack)
+            if (!(e instanceof HTTPError)) {
+                context.log(e.message, e.stack)
+                e = new HTTPError({ error: e.message }, 500)
+            }
             context.res = {
-                status: e.code || 400,
+                status: e.code,
                 body: e.message,
             }
         }
