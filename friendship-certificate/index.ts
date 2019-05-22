@@ -35,12 +35,18 @@ function isK256JsonWebKey(x: JsonWebKey): x is JsonWebKey {
         x.key_ops.join().length < 20
     )
 }
+const MAX_CHANNEL = 3
+const MIN_CHANNEL = 0
 function getParams(method: 'get', req: HttpRequest): { laterThan: Date; network: string; channel: string }
 function getParams(method: 'post', req: HttpRequest): { cert: CertificatePacked }
 function getParams(method: string, req: HttpRequest): any {
     const { channel, laterThan, network } = req.query
     if (method === 'get') {
         if (!channel || !network) throw new HTTPError({ error: 'Missing parameters "channel"', doc })
+        const channel16bits = parseInt(channel, 16)
+        // Allow channel 0 to 3 currently
+        if (isNaN(channel16bits) || channel16bits > MAX_CHANNEL || MIN_CHANNEL > channel16bits)
+            throw new HTTPError({ error: 'invalid channel', max: MAX_CHANNEL, min: MIN_CHANNEL })
         return { network, channel, laterThan: new Date(laterThan || 0) }
     } else if (method === 'post') {
         let cert: CertificatePacked
